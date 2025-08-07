@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Backup all data by default -->
+    <include domain="root" path="."/>
+    <!-- Exclude device-specific preferences -->
+    <exclude domain="sharedpref" path="device.xml"/>
+</full-backup-content>
