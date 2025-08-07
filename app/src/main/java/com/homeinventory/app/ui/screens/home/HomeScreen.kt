@@ -31,12 +31,14 @@ import com.homeinventory.app.viewmodel.InventoryViewModel
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: InventoryViewModel = hiltViewModel()
+    viewModel: InventoryViewModel = hiltViewModel(),
+    themeViewModel: ThemeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val totalItems by viewModel.totalItemsCount.collectAsStateWithLifecycle()
     val lowStockCount by viewModel.lowStockItemsCount.collectAsStateWithLifecycle()
     val urgentItems by viewModel.urgentAttentionItems.collectAsStateWithLifecycle()
+    val isDarkTheme by themeViewModel.isDarkTheme.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -67,10 +69,10 @@ fun HomeScreen(
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                IconButton(onClick = { /* TODO: Dark Mode Toggle */ }) {
+                IconButton(onClick = { themeViewModel.toggleTheme() }) {
                     Icon(
-                        imageVector = Icons.Default.DarkMode,
-                        contentDescription = "Dark Mode",
+                        imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                        contentDescription = "Toggle Theme",
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -128,8 +130,8 @@ fun HomeScreen(
                     navController.navigate("shopping")
                 },
                 modifier = Modifier.padding(16.dp),
-                containerColor = iOSBlue,
-                contentColor = Color.White
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ) {
                 Icon(
                     imageVector = Icons.Default.AutoAwesome,
@@ -151,7 +153,7 @@ fun UrgentAlertsBanner(
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clickable { onAlertClick() },
         colors = CardDefaults.cardColors(
-            containerColor = Color.Red.copy(alpha = 0.1f)
+            containerColor = MaterialTheme.colorScheme.errorContainer
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -164,7 +166,7 @@ fun UrgentAlertsBanner(
             Icon(
                 imageVector = Icons.Default.Warning,
                 contentDescription = "Warning",
-                tint = Color.Red,
+                tint = MaterialTheme.colorScheme.error,
                 modifier = Modifier.size(24.dp)
             )
             
@@ -175,7 +177,7 @@ fun UrgentAlertsBanner(
                     text = "🚨 URGENT: Items Need Attention",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Red
+                    color = MaterialTheme.colorScheme.error
                 )
                 Text(
                     text = "${urgentItems.size} items need immediate attention",
@@ -187,7 +189,7 @@ fun UrgentAlertsBanner(
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = "View Details",
-                tint = Color.Red
+                tint = MaterialTheme.colorScheme.error
             )
         }
     }
@@ -203,7 +205,7 @@ fun QuickStatsHeader(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SystemGray6
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -240,7 +242,7 @@ fun QuickStatsHeader(
                     text = lowStockCount.toString(),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = if (lowStockCount > 0) Color.Red else iOSGreen
+                    color = if (lowStockCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -262,7 +264,7 @@ fun CategoryCard(
             .height(160.dp)
             .clickable { onClick() },
         colors = CardDefaults.cardColors(
-            containerColor = SystemGray6
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -278,7 +280,7 @@ fun CategoryCard(
                 modifier = Modifier
                     .size(50.dp)
                     .background(
-                        color = category.color.copy(alpha = 0.2f),
+                        color = category.color.copy(alpha = 0.2f), // Retaining category.color for now
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
@@ -286,7 +288,7 @@ fun CategoryCard(
                 Icon(
                     imageVector = getCategoryIcon(category),
                     contentDescription = category.displayName,
-                    tint = category.color,
+                    tint = category.color, // Retaining category.color for now
                     modifier = Modifier.size(30.dp)
                 )
             }
@@ -313,7 +315,7 @@ fun CategoryCard(
                     Text(
                         text = "$lowStockCount need restocking",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Red
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
             }
