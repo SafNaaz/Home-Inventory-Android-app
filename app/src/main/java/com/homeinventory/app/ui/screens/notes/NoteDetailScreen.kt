@@ -4,15 +4,44 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.homeinventory.app.model.Note
-import java.util.*
+
+private class CharacterLimitTransformation(private val limit: Int) : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val originalText = text.text
+        val truncatedText = if (originalText.length > limit) {
+            originalText.substring(0, limit)
+        } else {
+            originalText
+        }
+
+        val offsetMapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                // This ensures the cursor position is always valid
+                return offset.coerceIn(0, truncatedText.length)
+            }
+
+            override fun transformedToOriginal(offset: Int): Int {
+                // This ensures the cursor position is always valid
+                return offset.coerceIn(0, originalText.length)
+            }
+        }
+
+        return TransformedText(AnnotatedString(truncatedText), offsetMapping)
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,23 +52,23 @@ fun NoteDetailScreen(
 ) {
     val selectedNote by viewModel.selectedNote.collectAsState()
 
-    // Use local state for text fields to ensure a smooth editing experience
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
+    
+    // Start in edit mode for new notes, otherwise read-only
+    var isEditMode by remember { mutableStateOf(noteId == "new") }
 
-    // This effect triggers loading the note from the database
     LaunchedEffect(noteId) {
         if (noteId != null && noteId != "new") {
             viewModel.getNoteById(noteId)
         } else {
-            // It's a new note, so we clear the selection in the VM and reset local state
             viewModel.clearSelectedNote()
             title = ""
             content = ""
+            isEditMode = true // Ensure new notes are always editable
         }
     }
 
-    // This effect updates the local state once the note is loaded from the VM
     LaunchedEffect(selectedNote) {
         selectedNote?.let {
             title = it.title
@@ -57,7 +86,7 @@ fun NoteDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (noteId == "new") "New Note" else "Edit Note") },
+                title = { Text(if (noteId == "new") "New Note" else if (isEditMode) "Edit Note" else "Note") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -65,11 +94,19 @@ fun NoteDetailScreen(
                 },
                 actions = {
                     if (noteId != null && noteId != "new") {
-                        IconButton(onClick = {
-                            viewModel.deleteNoteById(noteId)
-                            navController.popBackStack()
-                        }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete")
+                        if (isEditMode) {
+                            // Show Delete button when editing an existing note
+                            IconButton(onClick = {
+                                viewModel.deleteNoteById(noteId)
+                                navController.popBackStack()
+                            }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete")
+                            }
+                        } else {
+                            // Show Edit button when in read-only mode
+                            IconButton(onClick = { isEditMode = true }) {
+                                Icon(Icons.Default.Edit, contentDescription = "Edit")
+                            }
                         }
                     }
                 }
@@ -85,16 +122,18 @@ fun NoteDetailScreen(
             // Title TextField
             OutlinedTextField(
                 value = title,
-                onValueChange = { title = it },
+                onValueChange = { if (it.length <= titleCharLimit) title = it },
                 label = { Text("Title") },
                 modifier = Modifier.fillMaxWidth(),
-                isError = !isTitleValid && title.isNotEmpty(), // Show error if invalid and not empty
+                readOnly = !isEditMode,
+                isError = !isTitleValid && title.isNotEmpty(),
                 singleLine = true
             )
             CharacterCount(
                 count = title.length,
                 limit = titleCharLimit,
-                isError = !isTitleValid
+                isError = !isTitleValid,
+                isPristine = title.isEmpty()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -107,7 +146,10 @@ fun NoteDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                isError = !isContentValid
+                readOnly = !isEditMode,
+                isError = !isContentValid,
+                // Apply the transformation here to prevent the crash
+                visualTransformation = CharacterLimitTransformation(contentCharLimit)
             )
             CharacterCount(
                 count = content.length,
@@ -115,41 +157,55 @@ fun NoteDetailScreen(
                 isError = !isContentValid
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            if (isEditMode) {
+                Spacer(modifier = Modifier.height(16.dp))
+                // Save Button
+                Button(
+                    onClick = {
+                        val finalTitle = title.take(titleCharLimit)
+                        val finalContent = content.take(contentCharLimit)
 
-            // Save Button
-            Button(
-                onClick = {
-                    if (noteId == "new") {
-                        viewModel.addNewNote(title, content)
-                    } else {
-                        noteId?.let {
-                            viewModel.updateNote(it, title, content)
+                        if (noteId == "new") {
+                            viewModel.addNewNote(finalTitle, finalContent)
+                        } else {
+                            noteId?.let {
+                                viewModel.updateNote(it, finalTitle, finalContent)
+                            }
                         }
-                    }
-                    navController.popBackStack()
-                },
-                enabled = isSaveEnabled,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Save")
+                        navController.popBackStack()
+                    },
+                    enabled = isSaveEnabled,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Save")
+                }
             }
         }
     }
 }
 
 @Composable
-private fun CharacterCount(count: Int, limit: Int, isError: Boolean) {
+private fun CharacterCount(
+    count: Int,
+    limit: Int,
+    isError: Boolean,
+    isPristine: Boolean = false
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 4.dp, end = 16.dp),
         horizontalArrangement = Arrangement.End
     ) {
+        val color = when {
+            isPristine && isError -> MaterialTheme.colorScheme.onSurfaceVariant
+            isError -> MaterialTheme.colorScheme.error
+            else -> MaterialTheme.colorScheme.onSurfaceVariant
+        }
         Text(
             text = "$count / $limit",
             style = MaterialTheme.typography.bodySmall,
-            color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+            color = color
         )
     }
 }

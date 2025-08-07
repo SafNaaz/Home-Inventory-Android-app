@@ -54,9 +54,9 @@ fun NotesScreen(
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    contentPadding = PaddingValues(16.dp), // Increased padding
+                    verticalArrangement = Arrangement.spacedBy(16.dp), // Increased spacing
+                    horizontalArrangement = Arrangement.spacedBy(16.dp) // Increased spacing
                 ) {
                     items(notes) { note ->
                         NoteTile(note = note) {
@@ -74,15 +74,16 @@ fun NoteTile(note: Note, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .aspectRatio(1f) // Makes the tile a square
             .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp) // Slightly more elevation
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
                 text = note.title,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge, // Larger title
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -91,7 +92,7 @@ fun NoteTile(note: Note, onClick: () -> Unit) {
             Text(
                 text = note.content,
                 style = MaterialTheme.typography.bodyMedium,
-                maxLines = 4,
+                maxLines = 5, // Allow more lines for content
                 overflow = TextOverflow.Ellipsis
             )
         }
