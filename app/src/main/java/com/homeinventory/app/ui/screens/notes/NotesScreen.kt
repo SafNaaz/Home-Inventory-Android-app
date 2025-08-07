@@ -1,8 +1,9 @@
 package com.homeinventory.app.ui.screens.notes
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -12,10 +13,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.times
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.homeinventory.app.model.Note
+import kotlinx.coroutines.launch // Make sure this is imported
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotesScreen(
     navController: NavController,
@@ -24,6 +28,9 @@ fun NotesScreen(
     val notes by viewModel.notes.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
     var noteToDelete by remember { mutableStateOf<Note?>(null) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope() // Coroutine scope for launching snackbar
 
     if (showDeleteDialog) {
         AlertDialog(
@@ -47,19 +54,36 @@ fun NotesScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate("note_detail/new?edit=true") },
+                onClick = {
+                    if (notes.size < 6) {
+                        navController.navigate("note_detail/new?edit=true")
+                    } else {
+                        // Show error message using SnackbarHostState
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = "Maximum of 6 notes reached. Please delete a note to add a new one.",
+                                actionLabel = "Dismiss",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
+                    }
+                },
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Note")
             }
         }
     ) { padding ->
-        LazyColumn(
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(8.dp)
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(notes) { note ->
                 NoteTile(
@@ -90,27 +114,30 @@ fun NoteTile(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .height(200.dp)
             .padding(vertical = 4.dp),
         onClick = onClick
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier.weight(1f)
+            Text(text = note.title, style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = note.content, style = MaterialTheme.typography.bodyMedium, maxLines = 3)
+            Spacer(modifier = Modifier.weight(1f))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
             ) {
-                Text(text = note.title, style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = note.content, style = MaterialTheme.typography.bodyMedium, maxLines = 2)
-            }
-            IconButton(onClick = onEditClick) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit Note")
-            }
-            IconButton(onClick = onDeleteClick) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete Note")
+                IconButton(onClick = onEditClick) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit Note")
+                }
+                IconButton(onClick = onDeleteClick) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete Note")
+                }
             }
         }
     }
