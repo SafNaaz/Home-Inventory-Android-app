@@ -52,7 +52,7 @@ fun NoteDetailScreen(
 
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
-    
+
     var isEditMode by remember { mutableStateOf(noteId == "new") }
 
     LaunchedEffect(noteId) {
@@ -62,7 +62,7 @@ fun NoteDetailScreen(
             viewModel.clearSelectedNote()
             title = ""
             content = ""
-            isEditMode = true 
+            isEditMode = true
         }
     }
 
@@ -95,7 +95,7 @@ fun NoteDetailScreen(
                             // In edit mode, show a delete button
                             IconButton(onClick = {
                                 viewModel.deleteNoteById(noteId)
-                                navController.popBackStack() 
+                                navController.popBackStack()
                             }) {
                                 Icon(Icons.Default.Delete, contentDescription = "Delete")
                             }
@@ -128,9 +128,15 @@ fun NoteDetailScreen(
                 onValueChange = { if (it.length <= titleCharLimit) title = it },
                 label = { Text("Title") },
                 modifier = Modifier.fillMaxWidth(),
-                readOnly = !isEditMode,
+                enabled = isEditMode,
                 isError = !isTitleValid && title.isNotEmpty(),
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                    disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             )
             CharacterCount(
                 count = title.length,
@@ -149,9 +155,15 @@ fun NoteDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                readOnly = !isEditMode,
+                enabled = isEditMode,
                 isError = !isContentValid,
-                visualTransformation = CharacterLimitTransformation(contentCharLimit)
+                visualTransformation = CharacterLimitTransformation(contentCharLimit),
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                    disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             )
             CharacterCount(
                 count = content.length,
