@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -54,14 +56,17 @@ fun NotesScreen(
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(16.dp), // Increased padding
-                    verticalArrangement = Arrangement.spacedBy(16.dp), // Increased spacing
-                    horizontalArrangement = Arrangement.spacedBy(16.dp) // Increased spacing
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(notes) { note ->
-                        NoteTile(note = note) {
-                            navController.navigate("note_detail/${note.id}")
-                        }
+                        NoteTile(
+                            note = note,
+                            onClick = { navController.navigate("note_detail/${note.id}") },
+                            onEdit = { navController.navigate("note_detail/${note.id}") },
+                            onDelete = { viewModel.deleteNoteById(note.id) }
+                        )
                     }
                 }
             }
@@ -70,31 +75,52 @@ fun NotesScreen(
 }
 
 @Composable
-fun NoteTile(note: Note, onClick: () -> Unit) {
+fun NoteTile(
+    note: Note,
+    onClick: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1f) // Makes the tile a square
+            .aspectRatio(1f)
             .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp) // Slightly more elevation
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = note.title,
-                style = MaterialTheme.typography.titleLarge, // Larger title
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = note.content,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 5, // Allow more lines for content
-                overflow = TextOverflow.Ellipsis
-            )
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.TopStart)
+            ) {
+                Text(
+                    text = note.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = note.content,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp)
+            ) {
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit Note")
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete Note")
+                }
+            }
         }
     }
 }

@@ -28,12 +28,10 @@ private class CharacterLimitTransformation(private val limit: Int) : VisualTrans
 
         val offsetMapping = object : OffsetMapping {
             override fun originalToTransformed(offset: Int): Int {
-                // This ensures the cursor position is always valid
                 return offset.coerceIn(0, truncatedText.length)
             }
 
             override fun transformedToOriginal(offset: Int): Int {
-                // This ensures the cursor position is always valid
                 return offset.coerceIn(0, originalText.length)
             }
         }
@@ -55,7 +53,6 @@ fun NoteDetailScreen(
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
     
-    // Start in edit mode for new notes, otherwise read-only
     var isEditMode by remember { mutableStateOf(noteId == "new") }
 
     LaunchedEffect(noteId) {
@@ -65,7 +62,7 @@ fun NoteDetailScreen(
             viewModel.clearSelectedNote()
             title = ""
             content = ""
-            isEditMode = true // Ensure new notes are always editable
+            isEditMode = true 
         }
     }
 
@@ -95,17 +92,23 @@ fun NoteDetailScreen(
                 actions = {
                     if (noteId != null && noteId != "new") {
                         if (isEditMode) {
-                            // Show Delete button when editing an existing note
+                            // In edit mode, show a delete button
+                            IconButton(onClick = {
+                                viewModel.deleteNoteById(noteId)
+                                navController.popBackStack() 
+                            }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete")
+                            }
+                        } else {
+                            // In read-only mode, show Edit and Delete buttons
+                            IconButton(onClick = { isEditMode = true }) {
+                                Icon(Icons.Default.Edit, contentDescription = "Edit")
+                            }
                             IconButton(onClick = {
                                 viewModel.deleteNoteById(noteId)
                                 navController.popBackStack()
                             }) {
                                 Icon(Icons.Default.Delete, contentDescription = "Delete")
-                            }
-                        } else {
-                            // Show Edit button when in read-only mode
-                            IconButton(onClick = { isEditMode = true }) {
-                                Icon(Icons.Default.Edit, contentDescription = "Edit")
                             }
                         }
                     }
@@ -148,7 +151,6 @@ fun NoteDetailScreen(
                     .weight(1f),
                 readOnly = !isEditMode,
                 isError = !isContentValid,
-                // Apply the transformation here to prevent the crash
                 visualTransformation = CharacterLimitTransformation(contentCharLimit)
             )
             CharacterCount(
