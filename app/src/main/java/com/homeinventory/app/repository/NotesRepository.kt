@@ -32,18 +32,9 @@ class NotesRepository @Inject constructor(
         return getNotesCount() < 6
     }
     
-    suspend fun addNote(): Note? {
-        if (!canAddNote()) return null
-        
-        val noteEntity = NoteEntity(
-            title = "",
-            content = "",
-            createdDate = Date(),
-            lastModified = Date()
-        )
-        
-        notesDao.insertNote(noteEntity)
-        return Note.fromEntity(noteEntity)
+    suspend fun addNote(note: Note): Note {
+        notesDao.insertNote(note.toEntity())
+        return note
     }
     
     suspend fun updateNote(note: Note) {

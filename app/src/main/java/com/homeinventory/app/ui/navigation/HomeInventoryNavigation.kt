@@ -7,16 +7,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.homeinventory.app.R
+import androidx.navigation.navArgument
 import com.homeinventory.app.ui.screens.home.HomeScreen
 import com.homeinventory.app.ui.screens.insights.InsightsScreen
+import com.homeinventory.app.ui.screens.notes.NoteDetailScreen
 import com.homeinventory.app.ui.screens.notes.NotesScreen
 import com.homeinventory.app.ui.screens.shopping.ShoppingScreen
 
@@ -43,7 +44,7 @@ fun HomeInventoryNavigation() {
             NavigationBar {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
-                
+
                 items.forEach { screen ->
                     NavigationBarItem(
                         icon = { Icon(screen.icon, contentDescription = screen.title) },
@@ -51,16 +52,10 @@ fun HomeInventoryNavigation() {
                         selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                         onClick = {
                             navController.navigate(screen.route) {
-                                // Pop up to the start destination of the graph to
-                                // avoid building up a large stack of destinations
-                                // on the back stack as users select items
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
-                                // Avoid multiple copies of the same destination when
-                                // reselecting the same item
                                 launchSingleTop = true
-                                // Restore state when reselecting a previously selected item
                                 restoreState = true
                             }
                         }
@@ -85,6 +80,23 @@ fun HomeInventoryNavigation() {
             }
             composable(Screen.Notes.route) {
                 NotesScreen(navController = navController)
+            }
+            composable(
+                route = "note_detail/{noteId}",
+                arguments = listOf(navArgument("noteId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                NoteDetailScreen(
+                    navController = navController,
+                    noteId = backStackEntry.arguments?.getString("noteId")
+                )
+            }
+            composable(
+                route = "note_detail/new"
+            ) {
+                NoteDetailScreen(
+                    navController = navController,
+                    noteId = "new"
+                )
             }
         }
     }
