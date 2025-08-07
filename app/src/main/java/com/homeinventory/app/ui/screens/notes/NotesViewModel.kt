@@ -3,6 +3,7 @@ package com.homeinventory.app.ui.screens.notes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.homeinventory.app.model.Note
+import com.homeinventory.app.model.NoteEntity
 import com.homeinventory.app.repository.NotesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -78,6 +79,12 @@ class NotesViewModel @Inject constructor(
                     _selectedNote.value = null
                 }
             }
+        }
+    }
+
+    fun delete(note: Note) { // Changed parameter type to Note
+        viewModelScope.launch {
+            notesRepository.deleteNote(note)
         }
     }
 }

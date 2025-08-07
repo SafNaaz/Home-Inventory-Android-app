@@ -82,20 +82,21 @@ fun HomeInventoryNavigation() {
                 NotesScreen(navController = navController)
             }
             composable(
-                route = "note_detail/{noteId}",
-                arguments = listOf(navArgument("noteId") { type = NavType.StringType })
-            ) { backStackEntry ->
-                NoteDetailScreen(
-                    navController = navController,
-                    noteId = backStackEntry.arguments?.getString("noteId")
+                route = "note_detail/{noteId}?edit={edit}",
+                arguments = listOf(
+                    navArgument("noteId") { type = NavType.StringType },
+                    navArgument("edit") {
+                        type = NavType.BoolType
+                        defaultValue = false
+                    }
                 )
-            }
-            composable(
-                route = "note_detail/new"
-            ) {
+            ) { backStackEntry ->
+                val noteId = backStackEntry.arguments?.getString("noteId")
+                val startInEditMode = backStackEntry.arguments?.getBoolean("edit") ?: false
                 NoteDetailScreen(
                     navController = navController,
-                    noteId = "new"
+                    noteId = noteId,
+                    startInEditMode = startInEditMode
                 )
             }
         }

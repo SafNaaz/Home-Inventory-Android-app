@@ -46,14 +46,38 @@ private class CharacterLimitTransformation(private val limit: Int) : VisualTrans
 fun NoteDetailScreen(
     navController: NavController,
     noteId: String?,
+    startInEditMode: Boolean,
     viewModel: NotesViewModel = hiltViewModel()
 ) {
     val selectedNote by viewModel.selectedNote.collectAsState()
 
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
+    var isEditMode by remember { mutableStateOf(startInEditMode || noteId == "new") }
+    
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
-    var isEditMode by remember { mutableStateOf(noteId == "new") }
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Note") },
+            text = { Text("Are you sure you want to delete this note? This action cannot be undone.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        selectedNote?.let { note ->
+                            viewModel.delete(note)
+                            navController.popBackStack()
+                        }
+                        showDeleteDialog = false
+                    }
+                ) { Text("Delete") }
+            },
+            dismissButton = {
+                Button(onClick = { showDeleteDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
 
     LaunchedEffect(noteId) {
         if (noteId != null && noteId != "new") {
@@ -78,7 +102,8 @@ fun NoteDetailScreen(
 
     val isTitleValid = title.isNotBlank() && title.length <= titleCharLimit
     val isContentValid = content.length <= contentCharLimit
-    val isSaveEnabled = isTitleValid && isContentValid
+    var isSaveInProgress by remember { mutableStateOf(false) }
+    val isSaveEnabled = isTitleValid && isContentValid && !isSaveInProgress
 
     Scaffold(
         topBar = {
@@ -93,10 +118,7 @@ fun NoteDetailScreen(
                     if (noteId != null && noteId != "new") {
                         if (isEditMode) {
                             // In edit mode, show a delete button
-                            IconButton(onClick = {
-                                viewModel.deleteNoteById(noteId)
-                                navController.popBackStack()
-                            }) {
+                            IconButton(onClick = { showDeleteDialog = true }) {
                                 Icon(Icons.Default.Delete, contentDescription = "Delete")
                             }
                         } else {
@@ -104,10 +126,7 @@ fun NoteDetailScreen(
                             IconButton(onClick = { isEditMode = true }) {
                                 Icon(Icons.Default.Edit, contentDescription = "Edit")
                             }
-                            IconButton(onClick = {
-                                viewModel.deleteNoteById(noteId)
-                                navController.popBackStack()
-                            }) {
+                            IconButton(onClick = { showDeleteDialog = true }) {
                                 Icon(Icons.Default.Delete, contentDescription = "Delete")
                             }
                         }
@@ -150,7 +169,7 @@ fun NoteDetailScreen(
             // Content TextField
             OutlinedTextField(
                 value = content,
-                onValueChange = { content = it },
+                onValueChange = { if (it.length <= contentCharLimit) content = it },
                 label = { Text("Content") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -176,6 +195,7 @@ fun NoteDetailScreen(
                 // Save Button
                 Button(
                     onClick = {
+                        isSaveInProgress = true
                         val finalTitle = title.take(titleCharLimit)
                         val finalContent = content.take(contentCharLimit)
 
@@ -191,7 +211,7 @@ fun NoteDetailScreen(
                     enabled = isSaveEnabled,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Save")
+                    Text(if (isSaveInProgress) "Saving..." else "Save")
                 }
             }
         }
