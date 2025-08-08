@@ -3,5 +3,4 @@
     <!-- Backup all data by default -->
     <include domain="root" path="."/>
     <!-- Exclude device-specific preferences -->
-    <exclude domain="sharedpref" path="device.xml"/>
 </full-backup-content>
