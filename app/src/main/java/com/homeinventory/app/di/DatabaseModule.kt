@@ -2,10 +2,8 @@ package com.homeinventory.app.di
 
 import android.content.Context
 import androidx.room.Room
-import com.homeinventory.app.data.HomeInventoryDatabase
-import com.homeinventory.app.data.dao.InventoryDao
-import com.homeinventory.app.data.dao.NotesDao
-import com.homeinventory.app.data.dao.ShoppingDao
+import com.homeinventory.app.data.database.*
+import com.homeinventory.app.data.repository.InventoryRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,9 +17,7 @@ object DatabaseModule {
     
     @Provides
     @Singleton
-    fun provideHomeInventoryDatabase(
-        @ApplicationContext context: Context
-    ): HomeInventoryDatabase {
+    fun provideHomeInventoryDatabase(@ApplicationContext context: Context): HomeInventoryDatabase {
         return Room.databaseBuilder(
             context.applicationContext,
             HomeInventoryDatabase::class.java,
@@ -32,17 +28,33 @@ object DatabaseModule {
     }
     
     @Provides
-    fun provideInventoryDao(database: HomeInventoryDatabase): InventoryDao {
-        return database.inventoryDao()
+    fun provideInventoryItemDao(database: HomeInventoryDatabase): InventoryItemDao {
+        return database.inventoryItemDao()
     }
     
     @Provides
-    fun provideShoppingDao(database: HomeInventoryDatabase): ShoppingDao {
-        return database.shoppingDao()
+    fun provideShoppingListItemDao(database: HomeInventoryDatabase): ShoppingListItemDao {
+        return database.shoppingListItemDao()
     }
     
     @Provides
     fun provideNotesDao(database: HomeInventoryDatabase): NotesDao {
         return database.notesDao()
+    }
+    
+    @Provides
+    fun provideSettingsDao(database: HomeInventoryDatabase): SettingsDao {
+        return database.settingsDao()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideInventoryRepository(
+        inventoryItemDao: InventoryItemDao,
+        shoppingListItemDao: ShoppingListItemDao,
+        notesDao: NotesDao,
+        settingsDao: SettingsDao
+    ): InventoryRepository {
+        return InventoryRepository(inventoryItemDao, shoppingListItemDao, notesDao, settingsDao)
     }
 }
