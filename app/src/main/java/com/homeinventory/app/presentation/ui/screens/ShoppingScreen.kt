@@ -125,18 +125,6 @@ private fun GeneratingShoppingView(
         topBar = {
             TopAppBar(
                 title = { Text("Review Your Shopping List") },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        println("🏠 Navigating to Home from Generating Shopping View")
-                        onNavigateToHome()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = "Go to Home",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                },
                 actions = {
                     TextButton(
                         onClick = { 
@@ -287,19 +275,7 @@ private fun ReadyShoppingView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Shopping Checklist Ready") },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        println("🏠 Navigating to Home from Ready Shopping View")
-                        onNavigateToHome()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = "Go to Home",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+                title = { Text("Shopping Checklist Ready") }
             )
         }
     ) { paddingValues ->
@@ -367,18 +343,6 @@ private fun ActiveShoppingView(
                             text = "$checkedCount/$totalCount completed",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        println("🏠 Navigating to Home from Active Shopping View")
-                        onNavigateToHome()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = "Go to Home",
-                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
