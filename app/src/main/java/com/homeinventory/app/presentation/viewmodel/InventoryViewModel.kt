@@ -126,25 +126,8 @@ class InventoryViewModel @Inject constructor(
             try {
                 val settings = repository.getSettings()
                 _settings.value = settings
-                
-                // Initialize database with sample data if empty
-                initializeDatabaseIfEmpty()
             } catch (e: Exception) {
                 _errorMessage.value = "Failed to load settings: ${e.message}"
-            }
-        }
-    }
-    
-    private fun initializeDatabaseIfEmpty() {
-        viewModelScope.launch {
-            try {
-                val existingItems = repository.getAllItems().first()
-                if (existingItems.isEmpty()) {
-                    // Database is empty, populate with sample data
-                    repository.resetToDefaults()
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "Failed to initialize database: ${e.message}"
             }
         }
     }

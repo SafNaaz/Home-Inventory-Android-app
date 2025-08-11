@@ -105,16 +105,31 @@ fun SettingsScreen(
                     }
                     
                     if (settings.isInventoryReminderEnabled) {
+                        var showTimePickerDialog1 by remember { mutableStateOf(false) }
+                        
                         SettingsItem(
                             icon = Icons.Filled.Schedule,
                             title = "First Reminder",
                             subtitle = "Daily reminder at ${settings.reminderTime1}",
                             iconTint = Color(0xFFFF9500)
                         ) {
-                            TextButton(onClick = { /* TODO: Time picker */ }) {
+                            TextButton(onClick = { showTimePickerDialog1 = true }) {
                                 Text(settings.reminderTime1)
                             }
                         }
+                        
+                        if (showTimePickerDialog1) {
+                            TimePickerDialog(
+                                initialTime = settings.reminderTime1,
+                                onDismiss = { showTimePickerDialog1 = false },
+                                onTimeSelected = { selectedTime ->
+                                    viewModel.updateReminderTimes(selectedTime, if (settings.isSecondReminderEnabled) settings.reminderTime2 else null)
+                                    showTimePickerDialog1 = false
+                                }
+                            )
+                        }
+                        
+                        var showTimePickerDialog2 by remember { mutableStateOf(false) }
                         
                         SettingsItem(
                             icon = if (settings.isSecondReminderEnabled) Icons.Filled.NotificationAdd else Icons.Filled.NotificationsOff,
@@ -138,9 +153,20 @@ fun SettingsScreen(
                                 subtitle = "Daily reminder at ${settings.reminderTime2}",
                                 iconTint = Color(0xFF5856D6)
                             ) {
-                                TextButton(onClick = { /* TODO: Time picker */ }) {
+                                TextButton(onClick = { showTimePickerDialog2 = true }) {
                                     Text(settings.reminderTime2)
                                 }
+                            }
+                            
+                            if (showTimePickerDialog2) {
+                                TimePickerDialog(
+                                    initialTime = settings.reminderTime2,
+                                    onDismiss = { showTimePickerDialog2 = false },
+                                    onTimeSelected = { selectedTime ->
+                                        viewModel.updateReminderTimes(settings.reminderTime1, selectedTime)
+                                        showTimePickerDialog2 = false
+                                    }
+                                )
                             }
                         }
                     }
@@ -286,4 +312,125 @@ private fun SettingsItem(
         
         action()
     }
+}
+
+@Composable
+private fun TimePickerDialog(
+    initialTime: String,
+    onDismiss: () -> Unit,
+    onTimeSelected: (String) -> Unit
+) {
+    var selectedHour by remember { mutableStateOf(initialTime.split(":")[0].toInt()) }
+    var selectedMinute by remember { mutableStateOf(initialTime.split(":")[1].toInt()) }
+    var is24HourFormat by remember { mutableStateOf(true) }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Select Time") },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Hour selection
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        IconButton(onClick = { 
+                            selectedHour = if (is24HourFormat) {
+                                if (selectedHour >= 23) 0 else selectedHour + 1
+                            } else {
+                                if (selectedHour >= 12) 1 else selectedHour + 1
+                            }
+                        }) {
+                            Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Increase hour")
+                        }
+                        
+                        Text(
+                            text = String.format("%02d", selectedHour),
+                            style = MaterialTheme.typography.headlineLarge
+                        )
+                        
+                        IconButton(onClick = { 
+                            selectedHour = if (is24HourFormat) {
+                                if (selectedHour <= 0) 23 else selectedHour - 1
+                            } else {
+                                if (selectedHour <= 1) 12 else selectedHour - 1
+                            }
+                        }) {
+                            Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Decrease hour")
+                        }
+                    }
+                    
+                    Text(
+                        text = ":",
+                        style = MaterialTheme.typography.headlineLarge
+                    )
+                    
+                    // Minute selection
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        IconButton(onClick = { 
+                            selectedMinute = if (selectedMinute >= 59) 0 else selectedMinute + 1
+                        }) {
+                            Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Increase minute")
+                        }
+                        
+                        Text(
+                            text = String.format("%02d", selectedMinute),
+                            style = MaterialTheme.typography.headlineLarge
+                        )
+                        
+                        IconButton(onClick = { 
+                            selectedMinute = if (selectedMinute <= 0) 59 else selectedMinute - 1
+                        }) {
+                            Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Decrease minute")
+                        }
+                    }
+                }
+                
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("24-hour format")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Switch(
+                        checked = is24HourFormat,
+                        onCheckedChange = { 
+                            is24HourFormat = it
+                            if (!is24HourFormat && selectedHour > 12) {
+                                // Convert 24h to 12h
+                                selectedHour -= 12
+                            } else if (is24HourFormat && !it && selectedHour == 0) {
+                                selectedHour = 12
+                            }
+                        }
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val formattedTime = String.format("%02d:%02d", selectedHour, selectedMinute)
+                    onTimeSelected(formattedTime)
+                }
+            ) {
+                Text("Select")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

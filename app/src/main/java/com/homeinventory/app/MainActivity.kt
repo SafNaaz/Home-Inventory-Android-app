@@ -80,10 +80,7 @@ fun AppWithErrorHandling() {
 
 @Composable
 fun MainAppContent() {
-    val viewModel: InventoryViewModel = hiltViewModel()
-    val settings by viewModel.settings.collectAsState()
-    
-    HomeInventoryTheme(darkTheme = settings.isDarkMode) {
+    HomeInventoryTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background

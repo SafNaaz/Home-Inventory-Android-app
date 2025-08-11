@@ -82,37 +82,6 @@ enum class InventorySubcategory(
     FACE("Face", "face", Color(0xFFFF2D92), InventoryCategory.PERSONAL_CARE),
     BODY("Body", "accessibility_new", Color(0xFF30D158), InventoryCategory.PERSONAL_CARE),
     HEAD("Head", "psychology", Color(0xFF5856D6), InventoryCategory.PERSONAL_CARE);
-
-    fun getSampleItems(): List<String> {
-        return when (this) {
-            // Fridge sample items
-            DOOR_BOTTLES -> listOf("Water Bottles", "Juice", "Milk", "Soft Drinks")
-            TRAY -> listOf("Eggs", "Butter", "Cheese", "Yogurt")
-            MAIN -> listOf("Leftovers", "Cooked Food", "Fruits", "Vegetables")
-            VEGETABLE -> listOf("Onions", "Tomatoes", "Potatoes", "Leafy Greens")
-            FREEZER -> listOf("Ice Cream", "Frozen Vegetables", "Meat", "Ice Cubes")
-            MINI_COOLER -> listOf("Cold Drinks", "Snacks", "Chocolates")
-
-            // Grocery sample items
-            RICE -> listOf("Basmati Rice", "Brown Rice", "Jasmine Rice", "Wild Rice")
-            PULSES -> listOf("Lentils", "Chickpeas", "Black Beans", "Kidney Beans")
-            CEREALS -> listOf("Oats", "Cornflakes", "Wheat Flakes", "Muesli")
-            CONDIMENTS -> listOf("Salt", "Sugar", "Spices", "Sauces")
-            OILS -> listOf("Cooking Oil", "Olive Oil", "Coconut Oil", "Ghee")
-
-            // Hygiene sample items
-            WASHING -> listOf("Detergent", "Fabric Softener", "Stain Remover")
-            DISHWASHING -> listOf("Dish Soap", "Dishwasher Tablets", "Sponges")
-            TOILET_CLEANING -> listOf("Toilet Cleaner", "Toilet Paper", "Air Freshener")
-            KIDS -> listOf("Diapers", "Baby Wipes", "Baby Shampoo")
-            GENERAL_CLEANING -> listOf("All-Purpose Cleaner", "Floor Cleaner", "Glass Cleaner")
-
-            // Personal Care sample items
-            FACE -> listOf("CC Cream", "Powder", "Face Wash", "Moisturizer")
-            BODY -> listOf("Lotion", "Deodorant", "Bathing Soap", "Body Wash")
-            HEAD -> listOf("Shampoo", "Conditioner", "Hair Oil", "Hair Gel")
-        }
-    }
 }
 
 // MARK: - Shopping Workflow States
@@ -223,26 +192,5 @@ data class AppSettings(
     fun addMiscItemToHistory(item: String): AppSettings {
         val newHistory = (miscItemHistory + item).distinct().takeLast(20)
         return copy(miscItemHistory = newHistory)
-    }
-}
-
-// MARK: - Default Items Helper
-object DefaultItemsHelper {
-    fun createSampleItems(): List<InventoryItem> {
-        val items = mutableListOf<InventoryItem>()
-        
-        InventorySubcategory.values().forEach { subcategory ->
-            subcategory.getSampleItems().forEach { sampleItemName ->
-                val item = InventoryItem(
-                    name = sampleItemName,
-                    quantity = kotlin.random.Random.nextDouble(0.2, 1.0),
-                    subcategory = subcategory,
-                    isCustom = false
-                )
-                items.add(item)
-            }
-        }
-        
-        return items
     }
 }

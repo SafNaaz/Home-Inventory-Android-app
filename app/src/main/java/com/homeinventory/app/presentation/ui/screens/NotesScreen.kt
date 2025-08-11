@@ -76,9 +76,9 @@ fun NotesScreen(
                 // Notes grid
                 LazyVerticalStaggeredGrid(
                     columns = StaggeredGridCells.Fixed(2),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalItemSpacing = 12.dp,
-                    contentPadding = PaddingValues(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalItemSpacing = 8.dp,
+                    contentPadding = PaddingValues(12.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     itemsIndexed(notes) { index, note ->
@@ -166,7 +166,7 @@ private fun NoteCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(160.dp) // Fixed height for consistent sizing
+            .height(150.dp) // Reduced height for more compact view
             .clickable { onView() }, // Tap to view like iOS
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
@@ -177,11 +177,11 @@ private fun NoteCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(12.dp), // Reduced padding
             verticalArrangement = Arrangement.SpaceBetween // Changed to space between for fixed height
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp) // Reduced spacing
+                verticalArrangement = Arrangement.spacedBy(6.dp) // Reduced spacing
             ) {
                 // Header with number and date (like iOS)
                 Row(
@@ -191,7 +191,7 @@ private fun NoteCard(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(20.dp) // Slightly smaller
+                            .size(18.dp) // Slightly smaller
                             .background(
                                 color = MaterialTheme.colorScheme.primary,
                                 shape = CircleShape
@@ -228,7 +228,7 @@ private fun NoteCard(
                         text = note.content,
                         style = MaterialTheme.typography.bodySmall, // Smaller text
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 3 // Limit lines for fixed height
+                        maxLines = 2 // Reduced lines for more compact view
                     )
                 } else {
                     Text(

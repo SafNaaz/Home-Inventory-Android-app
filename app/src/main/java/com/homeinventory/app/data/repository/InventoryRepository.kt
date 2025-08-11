@@ -324,10 +324,4 @@ class InventoryRepository @Inject constructor(
         deleteAllShoppingItems()
         deleteAllNotes()
     }
-    
-    suspend fun resetToDefaults() {
-        clearAllData()
-        val sampleItems = DefaultItemsHelper.createSampleItems()
-        insertItems(sampleItems)
-    }
 }
