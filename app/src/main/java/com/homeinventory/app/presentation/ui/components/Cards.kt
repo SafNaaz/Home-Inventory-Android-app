@@ -33,7 +33,7 @@ fun CategoryCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(160.dp)
+            .height(180.dp) // Increased height to ensure text doesn't cut off
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
@@ -46,13 +46,13 @@ fun CategoryCard(
                 .fillMaxSize()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
+            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
         ) {
             // Large Icon
             Icon(
                 imageVector = getCategoryIcon(category),
                 contentDescription = category.displayName,
-                modifier = Modifier.size(50.dp),
+                modifier = Modifier.size(48.dp),
                 tint = category.color
             )
             
@@ -60,25 +60,29 @@ fun CategoryCard(
             Text(
                 text = category.displayName,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                maxLines = 1 // Ensure single line
             )
             
             // Stats
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(2.dp) // Reduced spacing
             ) {
                 Text(
                     text = "$itemsCount items",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
                 )
                 
                 if (lowStockCount > 0) {
                     Text(
                         text = "$lowStockCount need restocking",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Red
+                        color = Color.Red,
+                        maxLines = 2, // Allow 2 lines for this text if needed
+                        lineHeight = 14.sp // Compact line height
                     )
                 }
             }
