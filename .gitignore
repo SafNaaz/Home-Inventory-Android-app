@@ -84,3 +84,6 @@ Thumbs.db
 *.zip
 *.tar.gz
 *.rar
+
+Fridge
+Fridge.xcodeproj
