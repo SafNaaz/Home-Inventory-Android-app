@@ -66,27 +66,6 @@ fun HomeScreen(
                     }
                 }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    when (settings.shoppingState) {
-                        com.homeinventory.app.data.model.ShoppingState.EMPTY -> {
-                            viewModel.startGeneratingShoppingList()
-                            onShoppingClick()
-                        }
-                        else -> {
-                            // Show alert or go to shopping directly
-                            onShoppingClick()
-                        }
-                    }
-                }
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.AutoAwesome,
-                    contentDescription = "Generate Shopping List"
-                )
-            }
         }
     ) { paddingValues ->
         Column(

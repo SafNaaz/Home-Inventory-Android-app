@@ -9,10 +9,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.homeinventory.app.data.model.InventoryCategory
 import com.homeinventory.app.data.model.InventorySubcategory
 import com.homeinventory.app.presentation.ui.screens.*
@@ -47,18 +49,29 @@ fun HomeInventoryNavigation() {
                             label = { Text(screen.title) },
                             selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                             onClick = {
-                                navController.navigate(screen.route) {
-                                    // Pop up to the start destination of the graph to
-                                    // avoid building up a large stack of destinations
-                                    // on the back stack as users select items
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
+                                if (screen.route == Screen.Home.route) {
+                                    // Always navigate to home, clearing the back stack
+                                    navController.navigate(Screen.Home.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            inclusive = false
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = false // Don't restore state for home to ensure fresh navigation
                                     }
-                                    // Avoid multiple copies of the same destination when
-                                    // reselecting the same item
-                                    launchSingleTop = true
-                                    // Restore state when reselecting a previously selected item
-                                    restoreState = true
+                                } else {
+                                    navController.navigate(screen.route) {
+                                        // Pop up to the start destination of the graph to
+                                        // avoid building up a large stack of destinations
+                                        // on the back stack as users select items
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        // Avoid multiple copies of the same destination when
+                                        // reselecting the same item
+                                        launchSingleTop = true
+                                        // Restore state when reselecting a previously selected item
+                                        restoreState = true
+                                    }
                                 }
                             }
                         )
@@ -90,7 +103,17 @@ fun HomeInventoryNavigation() {
             }
             
             composable(Screen.Shopping.route) {
-                ShoppingScreen()
+                ShoppingScreen(
+                    onNavigateToHome = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
             }
             
             composable(Screen.Insights.route) {
@@ -98,7 +121,35 @@ fun HomeInventoryNavigation() {
             }
             
             composable(Screen.Notes.route) {
-                NotesScreen()
+                NotesScreen(
+                    onNavigateToNoteDetail = { noteId ->
+                        navController.navigate("note_detail/$noteId")
+                    },
+                    onNavigateToNewNote = {
+                        navController.navigate("note_detail/new?edit=true")
+                    }
+                )
+            }
+            
+            composable(
+                route = "note_detail/{noteId}?edit={edit}",
+                arguments = listOf(
+                    navArgument("noteId") { type = NavType.StringType },
+                    navArgument("edit") {
+                        type = NavType.BoolType
+                        defaultValue = false
+                    }
+                )
+            ) { backStackEntry ->
+                val noteId = backStackEntry.arguments?.getString("noteId")
+                val startInEditMode = backStackEntry.arguments?.getBoolean("edit") ?: false
+                NoteDetailScreen(
+                    noteId = noteId,
+                    startInEditMode = startInEditMode,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
             }
             
             composable("category_detail/{categoryName}") { backStackEntry ->

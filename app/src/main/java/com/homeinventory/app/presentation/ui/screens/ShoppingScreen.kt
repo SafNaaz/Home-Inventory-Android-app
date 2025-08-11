@@ -21,7 +21,8 @@ import com.homeinventory.app.presentation.viewmodel.InventoryViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShoppingScreen(
-    viewModel: InventoryViewModel = hiltViewModel()
+    viewModel: InventoryViewModel = hiltViewModel(),
+    onNavigateToHome: () -> Unit = {}
 ) {
     val shoppingItems by viewModel.shoppingItems.collectAsState()
     val inventoryItems by viewModel.inventoryItems.collectAsState()
@@ -29,9 +30,9 @@ fun ShoppingScreen(
     
     when (settings.shoppingState) {
         ShoppingState.EMPTY -> EmptyShoppingView(viewModel)
-        ShoppingState.GENERATING -> GeneratingShoppingView(viewModel, shoppingItems, inventoryItems)
-        ShoppingState.LIST_READY -> ReadyShoppingView(viewModel, shoppingItems)
-        ShoppingState.SHOPPING -> ActiveShoppingView(viewModel, shoppingItems)
+        ShoppingState.GENERATING -> GeneratingShoppingView(viewModel, shoppingItems, inventoryItems, onNavigateToHome)
+        ShoppingState.LIST_READY -> ReadyShoppingView(viewModel, shoppingItems, onNavigateToHome)
+        ShoppingState.SHOPPING -> ActiveShoppingView(viewModel, shoppingItems, onNavigateToHome)
     }
 }
 
@@ -115,7 +116,8 @@ private fun EmptyShoppingView(viewModel: InventoryViewModel) {
 private fun GeneratingShoppingView(
     viewModel: InventoryViewModel,
     shoppingItems: List<ShoppingListItem>,
-    inventoryItems: List<InventoryItem>
+    inventoryItems: List<InventoryItem>,
+    onNavigateToHome: () -> Unit
 ) {
     var showAddMiscDialog by remember { mutableStateOf(false) }
     
@@ -124,8 +126,23 @@ private fun GeneratingShoppingView(
             TopAppBar(
                 title = { Text("Review Your Shopping List") },
                 navigationIcon = {
+                    IconButton(onClick = {
+                        println("🏠 Navigating to Home from Generating Shopping View")
+                        onNavigateToHome()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = "Go to Home",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                },
+                actions = {
                     TextButton(
-                        onClick = { viewModel.cancelShopping() }
+                        onClick = { 
+                            viewModel.cancelShopping()
+                            onNavigateToHome()
+                        }
                     ) {
                         Text("Cancel", color = Color.Red)
                     }
@@ -264,12 +281,25 @@ private fun GeneratingShoppingView(
 @Composable
 private fun ReadyShoppingView(
     viewModel: InventoryViewModel,
-    shoppingItems: List<ShoppingListItem>
+    shoppingItems: List<ShoppingListItem>,
+    onNavigateToHome: () -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Shopping Checklist Ready") }
+                title = { Text("Shopping Checklist Ready") },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        println("🏠 Navigating to Home from Ready Shopping View")
+                        onNavigateToHome()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = "Go to Home",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
             )
         }
     ) { paddingValues ->
@@ -320,7 +350,8 @@ private fun ReadyShoppingView(
 @Composable
 private fun ActiveShoppingView(
     viewModel: InventoryViewModel,
-    shoppingItems: List<ShoppingListItem>
+    shoppingItems: List<ShoppingListItem>,
+    onNavigateToHome: () -> Unit
 ) {
     val checkedCount = shoppingItems.count { it.isChecked }
     val totalCount = shoppingItems.size
@@ -336,6 +367,18 @@ private fun ActiveShoppingView(
                             text = "$checkedCount/$totalCount completed",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        println("🏠 Navigating to Home from Active Shopping View")
+                        onNavigateToHome()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = "Go to Home",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -404,6 +447,7 @@ private fun ActiveShoppingView(
                     onClick = {
                         viewModel.completeAndRestoreShopping()
                         showCompleteDialog = false
+                        onNavigateToHome() // Navigate to home after completing shopping
                     }
                 ) {
                     Text("Complete & Restore")

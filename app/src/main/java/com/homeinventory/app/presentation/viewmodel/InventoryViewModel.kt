@@ -401,6 +401,30 @@ class InventoryViewModel @Inject constructor(
         }
     }
     
+    fun addNote(title: String, content: String) {
+        viewModelScope.launch {
+            try {
+                println("DEBUG: Adding note with title: '$title' and content length: ${content.length}")
+                if (repository.canAddNote()) {
+                    val newNote = Note(
+                        title = title,
+                        content = content,
+                        lastModified = System.currentTimeMillis()
+                    )
+                    println("DEBUG: Creating note with ID: ${newNote.id}")
+                    repository.insertNote(newNote)
+                    println("DEBUG: Note inserted successfully")
+                } else {
+                    println("DEBUG: Cannot add note - limit reached")
+                    _errorMessage.value = "Maximum of 6 notes allowed"
+                }
+            } catch (e: Exception) {
+                println("DEBUG: Error adding note: ${e.message}")
+                _errorMessage.value = "Failed to add note: ${e.message}"
+            }
+        }
+    }
+    
     fun updateNote(note: Note, title: String, content: String) {
         viewModelScope.launch {
             try {
